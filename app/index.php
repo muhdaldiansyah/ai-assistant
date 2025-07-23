@@ -10,8 +10,11 @@ $username = $_SESSION['username'] ?? null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Assistant</title>
     
-    <!-- Bootstrap CSS - NOTE: Add bootstrap.min.css to assets/css/ -->
-    <!-- <link href="assets/css/bootstrap.min.css" rel="stylesheet"> -->
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <style>
         * {
@@ -21,45 +24,85 @@ $username = $_SESSION['username'] ?? null;
         }
         
         :root {
-            --blenstrive-primary: #C8102E;
-            --blenstrive-primary-hover: #A00D24;
-            --blenstrive-primary-light: #FFEBEE;
-            --surface-color: #f8f9fa;
-            --border-color: #dee2e6;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --shadow-sm: 0 2px 4px rgba(0,0,0,0.04);
-            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
-            --max-width: 52rem;
+            /* Primary colors */
+            --primary: #10A37F;
+            --primary-hover: #0E8E6F;
+            --primary-light: rgba(16, 163, 127, 0.1);
+            
+            /* Neutral palette - ChatGPT style */
+            --background: #FFFFFF;
+            --sidebar-bg: #F7F7F8;
+            --surface: #F7F7F8;
+            --surface-secondary: #ECECEC;
+            --border: #D9D9E3;
+            --border-light: #E5E5E5;
+            
+            /* Text colors */
+            --text-primary: #202123;
+            --text-secondary: #565869;
+            --text-tertiary: #8E8EA0;
+            --text-quaternary: #ACACBE;
+            
+            /* Chat specific */
+            --user-bubble-bg: #F7F7F8;
+            --hover-bg: #ECECEC;
+            
+            /* System colors */
+            --separator: rgba(0, 0, 0, 0.1);
+            --overlay: rgba(0, 0, 0, 0.05);
+            
+            /* Shadows - softer and more subtle */
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+            
+            /* Layout */
+            --max-width: 48rem;
+            
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-            line-height: 1.6;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.5;
             color: var(--text-primary);
-            background-color: #ffffff;
+            background-color: var(--background);
             height: 100vh;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
         }
         
         
         .btn-secondary {
-            background: white;
-            border: 1px solid var(--border-color);
+            background: var(--surface);
+            border: 1px solid var(--border-light);
             color: var(--text-primary);
             padding: 0.5rem 1rem;
             border-radius: 0.5rem;
             font-weight: 500;
             font-size: 0.875rem;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all var(--transition-fast);
+            box-shadow: var(--shadow-xs);
         }
         
         .btn-secondary:hover {
-            background-color: var(--surface-color);
-            border-color: var(--blenstrive-primary);
-            color: var(--blenstrive-primary);
+            background-color: var(--surface-secondary);
+            border-color: var(--border);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-secondary:active {
+            transform: translateY(0);
+            box-shadow: none;
         }
         
         .loading-spinner {
@@ -82,24 +125,226 @@ $username = $_SESSION['username'] ?? null;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+            background: var(--background);
+        }
+        
+        /* Sidebar */
+        .main-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            transition: margin-left var(--transition-slow);
+        }
+        
+        .sidebar.hidden {
+            margin-left: -260px;
+        }
+        
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--separator);
+        }
+        
+        .new-chat-btn {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0.75rem;
+            transition: all var(--transition-base);
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+        
+        .new-chat-btn:hover {
+            background-color: var(--hover-bg);
+        }
+        
+        .threads-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+        
+
+        
+        .thread-item {
+            padding: 0.75rem 1rem;
+            margin: 0 0.25rem 0.125rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .thread-item:hover {
+            background-color: var(--hover-bg);
+        }
+        
+        .thread-item.active {
+            background-color: var(--surface-secondary);
+        }
+        
+        .thread-content {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .thread-actions {
+            display: none;
+            position: relative;
+        }
+        
+        .thread-item:hover .thread-actions {
+            display: block;
+        }
+        
+        .thread-menu-btn {
+            background: transparent;
+            border: none;
+            padding: 0.25rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .thread-menu-btn:hover {
+            background-color: var(--surface-secondary);
+            color: var(--text-primary);
+        }
+        
+        .thread-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.25rem;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            box-shadow: var(--shadow-lg);
+            min-width: 160px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .thread-menu.show {
+            display: block;
+        }
+        
+        .thread-menu-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: background-color var(--transition-fast);
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .thread-menu-item i {
+            width: 16px;
+            text-align: center;
+        }
+        
+        .thread-menu-item:hover {
+            background-color: var(--hover-bg);
+        }
+        
+        .thread-menu-item.delete {
+            color: #EF4444;
+        }
+        
+        .thread-title {
+            font-weight: 500;
+            margin-bottom: 0.125rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .thread-date {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+        }
+        
+        .toggle-sidebar-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            color: var(--text-primary);
+            font-size: 1.25rem;
+        }
+        
+        .toggle-sidebar-btn:hover {
+            background-color: var(--surface);
+            border-color: var(--border-light);
+        }
+        
+        .toggle-sidebar-btn:active {
+            background-color: var(--surface-secondary);
+        }
+        
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
         
         /* Header */
         .app-header {
-            background-color: #ffffff;
-            box-shadow: var(--shadow-sm);
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-light);
             position: relative;
             z-index: 100;
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03);
         }
         
         .header-content {
-            max-width: var(--max-width);
-            margin: 0 auto;
             padding: 1rem 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
         
         .app-branding {
@@ -108,21 +353,13 @@ $username = $_SESSION['username'] ?? null;
             gap: 0.75rem;
         }
         
-        .app-logo {
-            width: 40px;
-            height: 40px;
-            object-fit: contain;
-        }
         
         .app-title {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             font-weight: 600;
             color: var(--text-primary);
             margin: 0;
-        }
-        
-        .app-title span {
-            color: var(--blenstrive-primary);
+            opacity: 0.9;
         }
         
         /* Main Content Area */
@@ -141,12 +378,19 @@ $username = $_SESSION['username'] ?? null;
             align-items: center;
             justify-content: center;
             padding: 2rem;
-            animation: fadeIn 0.5s ease;
+            animation: fadeIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 100%;
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.98);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
         }
         
         .welcome-content {
@@ -157,65 +401,17 @@ $username = $_SESSION['username'] ?? null;
         
         
         .welcome-title {
-            font-size: 2.75rem;
-            font-weight: 700;
+            font-size: 2.5rem;
+            font-weight: 600;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--blenstrive-primary) 0%, #E91E63 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--text-primary);
         }
         
         .welcome-subtitle {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             color: var(--text-secondary);
-            margin-bottom: 3rem;
-            font-weight: 400;
-        }
-        
-        .suggestion-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1rem;
             margin-bottom: 2rem;
-        }
-        
-        .suggestion-card {
-            background-color: #ffffff;
-            border: 1px solid var(--border-color);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            text-align: left;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .suggestion-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-            border-color: var(--blenstrive-primary);
-        }
-        
-        
-        .suggestion-content {
-            flex: 1;
-        }
-        
-        .suggestion-title {
-            font-weight: 600;
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-        
-        .suggestion-example {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            line-height: 1.4;
+            font-weight: 400;
         }
         
         /* Chat Messages Container */
@@ -237,57 +433,82 @@ $username = $_SESSION['username'] ?? null;
         }
         
         @keyframes messageSlide {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { 
+                opacity: 0; 
+                transform: translateY(10px);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
         }
         
         .message-wrapper.user-message {
             background-color: transparent;
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.75rem 0;
         }
         
         .message-wrapper.assistant-message {
-            background-color: var(--surface-color);
-            margin-left: -100vw;
-            margin-right: -100vw;
-            padding-left: 100vw;
-            padding-right: 100vw;
+            background-color: transparent;
+            padding: 0.75rem 0;
         }
         
         .message {
             max-width: var(--max-width);
+            width: 100%;
             margin: 0 auto;
-            padding: 1.75rem 1.5rem;
-            display: flex;
-            gap: 1rem;
+            padding: 0 1.5rem;
         }
         
-        .message-avatar {
-            flex-shrink: 0;
-            width: 36px;
-            height: 36px;
-            border-radius: 0.5rem;
+        .user-message .message {
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .user-bubble {
+            background-color: var(--user-bubble-bg);
+            color: var(--text-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 1.125rem;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .assistant-content {
+            color: var(--text-primary);
+        }
+        
+        .message-actions {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.75rem;
+            align-items: center;
+        }
+        
+        .action-btn {
+            background: transparent;
+            border: none;
+            padding: 0.375rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            transition: all var(--transition-fast);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
-            font-size: 0.875rem;
-            box-shadow: var(--shadow-sm);
         }
         
-        .user-avatar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .assistant-avatar {
-            background: linear-gradient(135deg, var(--blenstrive-primary) 0%, var(--blenstrive-primary-hover) 100%);
-            color: white;
+        .action-btn:hover {
+            background-color: var(--hover-bg);
+            color: var(--text-primary);
         }
         
         .message-content {
             flex: 1;
-            line-height: 1.75;
-            font-size: 0.95rem;
+            line-height: 1.6;
+            font-size: 0.9375rem;
             color: var(--text-primary);
         }
         
@@ -300,22 +521,31 @@ $username = $_SESSION['username'] ?? null;
         }
         
         .message-content pre {
-            background-color: #1e1e1e;
-            color: #d4d4d4;
+            background-color: var(--surface);
+            color: var(--text-primary);
             padding: 1rem;
             border-radius: 0.5rem;
             overflow-x: auto;
             margin: 1rem 0;
             font-size: 0.875rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-xs);
+            transition: all var(--transition-fast);
+        }
+        
+        .message-content pre:hover {
+            box-shadow: var(--shadow-sm);
+            border-color: var(--border);
         }
         
         .message-content code {
-            background-color: rgba(200, 16, 46, 0.1);
-            color: var(--blenstrive-primary);
+            background-color: var(--surface);
+            color: var(--text-primary);
             padding: 0.125rem 0.375rem;
             border-radius: 0.25rem;
             font-size: 0.875em;
-            font-family: 'Consolas', 'Monaco', monospace;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+            border: 1px solid var(--border-light);
         }
         
         /* Input Area */
@@ -324,8 +554,8 @@ $username = $_SESSION['username'] ?? null;
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(to top, #ffffff 60%, transparent);
-            padding: 1.5rem 0 2rem;
+            background: linear-gradient(to top, var(--background) 85%, transparent);
+            padding: 1rem 0 1.5rem;
             pointer-events: none;
         }
         
@@ -338,18 +568,17 @@ $username = $_SESSION['username'] ?? null;
         
         .input-wrapper {
             position: relative;
-            background-color: #ffffff;
-            border: 2px solid var(--border-color);
-            border-radius: 1.5rem;
-            box-shadow: var(--shadow-lg);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-base);
             overflow: hidden;
         }
         
         .input-wrapper:focus-within {
-            border-color: var(--blenstrive-primary);
-            transform: translateY(-1px);
-            box-shadow: 0 12px 32px rgba(200, 16, 46, 0.15);
+            border-color: var(--border);
+            box-shadow: var(--shadow-lg);
         }
         
         .message-textarea {
@@ -357,11 +586,11 @@ $username = $_SESSION['username'] ?? null;
             border: none;
             outline: none;
             resize: none;
-            padding: 1rem 3.5rem 1rem 1.25rem;
-            font-size: 0.95rem;
+            padding: 1rem 3.5rem 1rem 1rem;
+            font-size: 1rem;
             font-family: inherit;
             line-height: 1.5;
-            max-height: 150px;
+            max-height: 200px;
             background: transparent;
             color: var(--text-primary);
         }
@@ -372,35 +601,55 @@ $username = $_SESSION['username'] ?? null;
         
         .send-button {
             position: absolute;
-            bottom: 0.75rem;
-            right: 0.75rem;
-            background: linear-gradient(135deg, var(--blenstrive-primary) 0%, var(--blenstrive-primary-hover) 100%);
-            color: white;
+            bottom: 0.875rem;
+            right: 0.875rem;
+            background: transparent;
+            color: var(--text-tertiary);
             border: none;
-            border-radius: 0.75rem;
-            width: 36px;
-            height: 36px;
+            border-radius: 0.375rem;
+            width: 28px;
+            height: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 1.125rem;
+            transition: all var(--transition-base);
+            font-size: 1rem;
         }
         
         .send-button:disabled {
             opacity: 0.4;
             cursor: not-allowed;
-            transform: scale(0.95);
         }
         
         .send-button:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(200, 16, 46, 0.3);
+            color: var(--text-primary);
+            background: var(--hover-bg);
         }
         
-        .send-button:active:not(:disabled) {
-            transform: scale(0.95);
+        .send-button.active {
+            color: var(--primary);
+        }
+        
+        /* Font Awesome icon adjustments */
+        .action-btn i {
+            font-size: 14px;
+        }
+        
+        .thread-menu-btn i {
+            font-size: 14px;
+        }
+        
+        .new-chat-btn i {
+            font-size: 14px;
+        }
+        
+        .send-button i {
+            font-size: 14px;
+        }
+        
+        .toggle-sidebar-btn i {
+            font-size: 18px;
         }
         
         /* Typing Indicator */
@@ -413,7 +662,7 @@ $username = $_SESSION['username'] ?? null;
         .typing-dot {
             width: 8px;
             height: 8px;
-            background-color: var(--blenstrive-primary);
+            background-color: var(--text-secondary);
             border-radius: 50%;
             animation: typing 1.4s infinite;
         }
@@ -438,39 +687,33 @@ $username = $_SESSION['username'] ?? null;
         }
         
         /* Helper Text */
-        .input-helper {
-            text-align: center;
-            margin-top: 0.75rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-        }
-        
-        /* University Badge */
-        .university-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background-color: var(--blenstrive-primary-light);
-            color: var(--blenstrive-primary);
-            padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
-            font-size: 0.75rem;
-            font-weight: 500;
-            margin-top: 1rem;
-        }
         
         /* Mobile Responsive */
         @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                z-index: 200;
+                box-shadow: var(--shadow-lg);
+                transform: translateX(-100%);
+            }
+            
+            .sidebar:not(.hidden) {
+                transform: translateX(0);
+            }
+            
+            .toggle-sidebar-btn {
+                display: block;
+            }
+            
             .welcome-title {
                 font-size: 2rem;
             }
             
             .welcome-subtitle {
                 font-size: 1rem;
-            }
-            
-            .suggestion-grid {
-                grid-template-columns: 1fr;
             }
             
             .message {
@@ -482,14 +725,28 @@ $username = $_SESSION['username'] ?? null;
                 padding: 1rem 0 1.5rem;
             }
             
-            .app-logo {
-                width: 32px;
-                height: 32px;
-            }
             
             .app-title {
                 font-size: 1.125rem;
             }
+        }
+        
+        /* Sidebar overlay for mobile */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 150;
+        }
+        
+        .sidebar-overlay.active {
+            display: block;
         }
         
         /* Loading State */
@@ -497,22 +754,81 @@ $username = $_SESSION['username'] ?? null;
             opacity: 0.7;
         }
         
-        /* Smooth Scrollbar */
-        .main-content::-webkit-scrollbar {
-            width: 8px;
+        /* Skeleton Loading Styles */
+        .skeleton-container {
+            padding: 0.5rem;
         }
         
-        .main-content::-webkit-scrollbar-track {
+        .skeleton-item {
+            padding: 0.75rem;
+            margin: 0 0.5rem 0.5rem;
+            border-radius: 0.5rem;
+            background: var(--background);
+        }
+        
+        .skeleton-line {
+            height: 0.875rem;
+            background: linear-gradient(
+                90deg,
+                var(--border-light) 0%,
+                var(--surface-secondary) 50%,
+                var(--border-light) 100%
+            );
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s ease-in-out infinite;
+            border-radius: 0.25rem;
+        }
+        
+        .skeleton-title {
+            width: 75%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skeleton-date {
+            width: 40%;
+            height: 0.75rem;
+            opacity: 0.6;
+        }
+        
+        @keyframes skeleton-shimmer {
+            0% {
+                background-position: 200% center;
+            }
+            100% {
+                background-position: -200% center;
+            }
+        }
+        
+        /* Scrollbar Styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
             background: transparent;
         }
         
-        .main-content::-webkit-scrollbar-thumb {
-            background-color: rgba(0, 0, 0, 0.2);
+        ::-webkit-scrollbar-thumb {
+            background-color: var(--text-quaternary);
             border-radius: 4px;
+            transition: background-color var(--transition-fast);
         }
         
-        .main-content::-webkit-scrollbar-thumb:hover {
-            background-color: rgba(0, 0, 0, 0.3);
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: var(--text-tertiary);
+        }
+        
+        /* Empty state styles */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.5s ease;
+            color: var(--text-secondary);
         }
     </style>
 </head>
@@ -522,64 +838,43 @@ $username = $_SESSION['username'] ?? null;
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <div class="app-branding">
-                    <h1 class="app-title">AI Assistant<span>Bot</span></h1>
+                <div class="header-left">
+                    <button class="toggle-sidebar-btn" id="toggleSidebar" onclick="toggleSidebar()">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="app-branding">
+                        <h1 class="app-title">AI Assistant</h1>
+                    </div>
                 </div>
-                <button onclick="startNewChat()" class="btn-secondary" id="newChatBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem; display: none;">
-                    + New Chat
-                </button>
             </div>
         </header>
 
-        <!-- Main Content -->
-        <main class="main-content" id="mainContent">
+        <!-- Main wrapper with sidebar -->
+        <div class="main-wrapper">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <button class="new-chat-btn" onclick="startNewChat()">
+                        <i class="fas fa-plus"></i> New Chat
+                    </button>
+                </div>
+                <div class="threads-list" id="threadsList">
+                    <!-- Threads will be loaded here -->
+                </div>
+            </aside>
+            
+            <!-- Sidebar overlay for mobile -->
+            <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+            <!-- Content area -->
+            <div class="content-area">
+                <!-- Main Content -->
+                <main class="main-content" id="mainContent">
             <!-- Welcome Screen -->
             <div class="welcome-container" id="welcomeScreen">
                 <div class="welcome-content">
-                    <h2 class="welcome-title">Welcome to AI Assistant</h2>
-                    <p class="welcome-subtitle">Your intelligent AI assistant</p>
-                    
-                    <div class="suggestion-grid">
-                        <div class="suggestion-card" data-prompt="What can you help me with?">
-                            <div class="suggestion-content">
-                                <div class="suggestion-title">General Help</div>
-                                <div class="suggestion-example">
-                                    Get help with questions, tasks, and general information
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="suggestion-card" data-prompt="How can I get started?">
-                            <div class="suggestion-content">
-                                <div class="suggestion-title">Getting Started</div>
-                                <div class="suggestion-example">
-                                    Discover how to begin using the AI assistant effectively
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="suggestion-card" data-prompt="Tell me about your capabilities">
-                            <div class="suggestion-content">
-                                <div class="suggestion-title">Capabilities</div>
-                                <div class="suggestion-example">
-                                    Learn about what the AI assistant can do for you
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="suggestion-card" data-prompt="What services do you provide?">
-                            <div class="suggestion-content">
-                                <div class="suggestion-title">Services</div>
-                                <div class="suggestion-example">
-                                    Explore the range of assistance and support available
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="university-badge">
-                        AI Assistant
-                    </div>
+                    <h2 class="welcome-title">AI Assistant</h2>
+                    <p class="welcome-subtitle">How can I help you today?</p>
                 </div>
             </div>
 
@@ -590,6 +885,8 @@ $username = $_SESSION['username'] ?? null;
                 </div>
             </div>
         </main>
+            </div>
+        </div>
 
         <!-- Input Section -->
         <div class="input-section">
@@ -598,25 +895,21 @@ $username = $_SESSION['username'] ?? null;
                     <textarea 
                         class="message-textarea" 
                         id="messageInput" 
-                        placeholder="Ask me anything or get help with your questions..."
+                        placeholder="Send a message"
                         rows="1"
                     ></textarea>
-                    <button class="send-button" id="sendButton">
-Send
+                    <button class="send-button" id="sendButton" title="Send message">
+                        <i class="fas fa-paper-plane"></i>
                     </button>
-                </div>
-                <div class="input-helper">
-                    Press Enter to send • Shift+Enter for new line
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS - NOTE: Add bootstrap.bundle.min.js to assets/js/ -->
-    <!-- <script src="assets/js/bootstrap.bundle.min.js"></script> -->
-    
-    <script src="/assets/js/common.js"></script>
+    <!-- Common JS if needed -->
+    <!-- <script src="/assets/js/common.js"></script> -->
     <script>
+    $(document).ready(function() {
         // Elements
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
@@ -631,16 +924,230 @@ Send
         let streamingMessageId = 0;
         let userInfo = { full_name: 'Guest', email: '', phone_number: '', nationality: '' };
         
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+        
         // Check if there's a thread_id in URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const urlThreadId = urlParams.get('thread_id');
         
         // Initialize
         function init() {
+            // Hide sidebar on mobile by default
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.add('hidden');
+            }
+            
             initializeThread();
+            loadThreadsList();
             messageInput.focus();
             updateSendButton();
-            document.getElementById('newChatBtn').style.display = 'block';
+        }
+        
+        // Toggle sidebar
+        window.toggleSidebar = function() {
+            $('#sidebar').toggleClass('hidden');
+            if (window.innerWidth <= 768) {
+                $('#sidebarOverlay').toggleClass('active');
+            }
+        }
+        
+        // Load threads list (only called on initial load)
+        async function loadThreadsList() {
+            const $threadsList = $('#threadsList');
+            
+            // Show skeleton loading state
+            $threadsList.html(`
+                <div class="skeleton-container">
+                    ${[1, 2, 3, 4].map(() => `
+                        <div class="skeleton-item">
+                            <div class="skeleton-line skeleton-title"></div>
+                            <div class="skeleton-line skeleton-date"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `);
+            
+            try {
+                const response = await fetch('api/get_threads.php');
+                const data = await response.json();
+                
+                if (data.success && data.threads) {
+                    $threadsList.empty();
+                    
+                    if (data.threads.length === 0) {
+                        $threadsList.html(`
+                            <div class="empty-state">
+                                <i class="far fa-comments" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                                <p style="margin: 0; font-weight: 500; color: var(--text-secondary);">No chats yet</p>
+                                <p style="margin: 0.25rem 0 0; font-size: 0.813rem; color: var(--text-tertiary);">Start a new conversation!</p>
+                            </div>
+                        `);
+                        return;
+                    }
+                    
+                    data.threads.forEach(thread => {
+                        const $threadItem = $(`
+                            <div class="thread-item" data-thread-id="${thread.id}">
+                                <div class="thread-content">
+                                    <div class="thread-title">${escapeHtml(thread.title)}</div>
+                                    <div class="thread-date">${formatDate(thread.updated_at)}</div>
+                                </div>
+                                <div class="thread-actions">
+                                    <button class="thread-menu-btn" onclick="toggleThreadMenu(event, '${thread.id}')">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    </button>
+                                    <div class="thread-menu" id="menu-${thread.id}">
+                                    <button class="thread-menu-item" onclick="renameThread('${thread.id}')">
+                                        <i class="fas fa-pen"></i>
+                                            Rename
+                                        </button>
+                                    <button class="thread-menu-item delete" onclick="deleteThread('${thread.id}')">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                    </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                        
+                        if (thread.id === threadId) {
+                            $threadItem.addClass('active');
+                        }
+                        
+                        $threadsList.append($threadItem);
+                    });
+                    
+                    // Bind click handlers using delegation
+                    $threadsList.off('click', '.thread-item');
+                    $threadsList.on('click', '.thread-item', function(e) {
+                        // Don't trigger if clicking on menu or actions
+                        if ($(e.target).closest('.thread-actions').length > 0) {
+                            return;
+                        }
+                        const clickedThreadId = $(this).data('thread-id');
+                        loadThread(clickedThreadId);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading threads:', error);
+                $threadsList.html(`
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                    <p style="margin: 0; font-weight: 500; color: var(--text-secondary);">Error loading chats</p>
+                    <p style="margin: 0.25rem 0 0; font-size: 0.813rem; color: var(--text-tertiary);">Please try again later</p>
+                </div>
+            `);
+            }
+        }
+        
+        // Add or update thread in sidebar
+        function updateThreadInSidebar() {
+            const $existingThread = $(`.thread-item[data-thread-id="${threadId}"]`);
+            
+            if ($existingThread.length === 0) {
+                // New thread - add to top
+                const firstMessage = messagesList.querySelector('.user-message .message-content')?.textContent || 'New Chat';
+                const title = firstMessage.substring(0, 50) + (firstMessage.length > 50 ? '...' : '');
+                
+                const $newThread = $(`
+                    <div class="thread-item active" data-thread-id="${threadId}">
+                        <div class="thread-content">
+                            <div class="thread-title">${escapeHtml(title)}</div>
+                            <div class="thread-date">Just now</div>
+                        </div>
+                        <div class="thread-actions">
+                            <button class="thread-menu-btn" onclick="toggleThreadMenu(event, '${threadId}')">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                            <div class="thread-menu" id="menu-${threadId}">
+                                <button class="thread-menu-item" onclick="renameThread('${threadId}')">
+                                    <i class="fas fa-pen"></i>
+                                    Rename
+                                </button>
+                                <button class="thread-menu-item delete" onclick="deleteThread('${threadId}')">
+                                    <i class="fas fa-trash"></i>
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+                
+                // Remove empty state if exists
+                $('#threadsList .empty-state').remove();
+                
+                // Add to top of list
+                $('#threadsList').prepend($newThread);
+                
+                // Update all other threads to inactive
+                $('.thread-item').not($newThread).removeClass('active');
+            } else {
+                // Existing thread - move to top and update date
+                $existingThread.find('.thread-date').text('Just now');
+                $existingThread.detach().prependTo('#threadsList');
+                
+                // Update active state
+                $('.thread-item').removeClass('active');
+                $existingThread.addClass('active');
+            }
+        }
+        
+        // Format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffTime = now - date;
+            const diffMinutes = Math.floor(diffTime / (1000 * 60));
+            const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffMinutes < 1) {
+                return 'Just now';
+            } else if (diffMinutes < 60) {
+                return `${diffMinutes} minutes ago`;
+            } else if (diffHours < 24) {
+                return `${diffHours} hours ago`;
+            } else if (diffDays === 0) {
+                return 'Today';
+            } else if (diffDays === 1) {
+                return 'Yesterday';
+            } else if (diffDays < 7) {
+                return `${diffDays} days ago`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+        
+        // Load thread without reloading list
+        async function loadThread(loadThreadId) {
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+            
+            // Clear current messages
+            $('#messagesList').empty();
+            
+            // Update thread ID
+            threadId = loadThreadId;
+            sessionStorage.setItem('current_thread_id', threadId);
+            
+            // Update active thread in sidebar immediately
+            $('.thread-item').removeClass('active');
+            $(`.thread-item[data-thread-id="${threadId}"]`).addClass('active');
+            
+            // Load thread messages
+            await loadExistingThread(threadId);
         }
         
         // Initialize thread
@@ -696,6 +1203,9 @@ Send
                 if (data.success && data.messages && data.messages.length > 0) {
                     showChatView();
                     
+                    // Clear messages first
+                    $('#messagesList').empty();
+                    
                     // Load previous messages
                     data.messages.forEach(msg => {
                         addMessage(msg.role, msg.message, false);
@@ -718,13 +1228,16 @@ Send
                     
                     // Clean up URL without refreshing
                     window.history.replaceState({}, document.title, window.location.pathname);
-                    
-                    // Enable chat for existing thread
-                    document.getElementById('newChatBtn').style.display = 'block';
+                } else {
+                    // No messages, show welcome screen
+                    $('#welcomeScreen').css('display', 'flex');
+                    $('#chatContainer').hide();
                 }
             } catch (error) {
                 console.error('Error loading thread:', error);
-                // Continue with new thread if loading fails
+                // Show welcome screen on error
+                $('#welcomeScreen').css('display', 'flex');
+                $('#chatContainer').hide();
             }
         }
         
@@ -739,12 +1252,17 @@ Send
         function updateSendButton() {
             const hasText = messageInput.value.trim().length > 0;
             sendButton.disabled = !hasText || isProcessing;
+            if (hasText && !isProcessing) {
+                sendButton.classList.add('active');
+            } else {
+                sendButton.classList.remove('active');
+            }
         }
         
         // Switch to chat view
         function showChatView() {
-            welcomeScreen.style.display = 'none';
-            chatContainer.style.display = 'block';
+            $('#welcomeScreen').hide();
+            $('#chatContainer').show();
         }
         
         // Scroll to bottom
@@ -761,7 +1279,7 @@ Send
             
             // Format code blocks
             text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
-                return `<pre><code class="${lang || ''}">${escapeHtml(code.trim())}</code></pre>`;
+                return `<pre><code class="${lang || ''}">${code.trim()}</code></pre>`;
             });
             
             // Format inline code
@@ -786,37 +1304,58 @@ Send
             const message = document.createElement('div');
             message.className = 'message';
             
-            const avatar = document.createElement('div');
-            avatar.className = `message-avatar ${role}-avatar`;
-            
             if (role === 'user') {
-                avatar.textContent = 'U';
+                const userBubble = document.createElement('div');
+                userBubble.className = 'user-bubble';
+                userBubble.innerHTML = formatMessageContent(content);
+                message.appendChild(userBubble);
             } else {
-                avatar.textContent = 'AI';
+                const assistantContent = document.createElement('div');
+                assistantContent.className = 'assistant-content';
+                
+                const messageContent = document.createElement('div');
+                messageContent.className = 'message-content';
+                if (isStreaming) {
+                    messageContent.classList.add('loading');
+                    streamingMessageId++;
+                    messageContent.id = `streaming-content-${streamingMessageId}`;
+                }
+                
+                if (content) {
+                    messageContent.innerHTML = formatMessageContent(content);
+                } else {
+                    messageContent.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
+                }
+                
+                assistantContent.appendChild(messageContent);
+                
+                // Add action buttons for assistant messages
+                if (content && !isStreaming) {
+                    const actions = document.createElement('div');
+                    actions.className = 'message-actions';
+                    actions.innerHTML = `
+                        <button class="action-btn" onclick="copyMessage(this)" title="Copy">
+                            <i class="far fa-copy"></i>
+                        </button>
+                        <button class="action-btn" title="Good response">
+                            <i class="far fa-thumbs-up"></i>
+                        </button>
+                        <button class="action-btn" title="Bad response">
+                            <i class="far fa-thumbs-down"></i>
+                        </button>
+                    `;
+                    assistantContent.appendChild(actions);
+                }
+                
+                message.appendChild(assistantContent);
             }
             
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-            if (isStreaming) {
-                messageContent.classList.add('loading');
-                streamingMessageId++;
-                messageContent.id = `streaming-content-${streamingMessageId}`;
-            }
-            
-            if (content) {
-                messageContent.innerHTML = formatMessageContent(content);
-            } else {
-                messageContent.innerHTML = '<div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>';
-            }
-            
-            message.appendChild(avatar);
-            message.appendChild(messageContent);
             messageWrapper.appendChild(message);
             messagesList.appendChild(messageWrapper);
             
             scrollToBottom();
             
-            return { element: messageContent, id: streamingMessageId };
+            return { element: role === 'assistant' ? message.querySelector('.message-content') : null, id: streamingMessageId };
         }
         
         // Update streaming message
@@ -825,6 +1364,26 @@ Send
             if (streamingElement) {
                 streamingElement.classList.remove('loading');
                 streamingElement.innerHTML = formatMessageContent(content);
+                
+                // Add action buttons after streaming is complete
+                const assistantContent = streamingElement.closest('.assistant-content');
+                if (assistantContent && !assistantContent.querySelector('.message-actions')) {
+                    const actions = document.createElement('div');
+                    actions.className = 'message-actions';
+                    actions.innerHTML = `
+                        <button class="action-btn" onclick="copyMessage(this)" title="Copy">
+                            <i class="far fa-copy"></i>
+                        </button>
+                        <button class="action-btn" title="Good response">
+                            <i class="far fa-thumbs-up"></i>
+                        </button>
+                        <button class="action-btn" title="Bad response">
+                            <i class="far fa-thumbs-down"></i>
+                        </button>
+                    `;
+                    assistantContent.appendChild(actions);
+                }
+                
                 scrollToBottom();
             }
         }
@@ -916,6 +1475,9 @@ Send
                     if (element) {
                         element.removeAttribute('id');
                     }
+                    
+                    // Add or update thread in sidebar
+                    updateThreadInSidebar();
                 });
                 
                 eventSource.addEventListener('error', (e) => {
@@ -966,11 +1528,31 @@ Send
         }
         
         // Start new chat
-        function startNewChat() {
-            if (confirm('Start a new chat? Current conversation will be saved in history.')) {
-                sessionStorage.removeItem('current_thread_id');
-                window.location.href = 'index.php';
+        window.startNewChat = function() {
+            // Clear current thread
+            sessionStorage.removeItem('current_thread_id');
+            threadId = null;
+            
+            // Clear messages
+            $('#messagesList').empty();
+            
+            // Show welcome screen
+            $('#welcomeScreen').css('display', 'flex');
+            $('#chatContainer').hide();
+            
+            // Update active state in sidebar
+            $('.thread-item').removeClass('active');
+            
+            // Initialize new thread
+            initializeThread();
+            
+            // Close sidebar on mobile
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
             }
+            
+            // Focus on input
+            messageInput.focus();
         }
         
         // Event Listeners
@@ -988,19 +1570,103 @@ Send
         
         sendButton.addEventListener('click', sendMessage);
         
-        // Suggestion cards
-        document.querySelectorAll('.suggestion-card').forEach(card => {
-            card.addEventListener('click', () => {
-                messageInput.value = card.dataset.prompt;
-                autoResizeTextarea();
-                updateSendButton();
-                messageInput.focus();
-                sendMessage();
+        
+        // Thread menu functions
+        window.toggleThreadMenu = function(event, threadId) {
+            event.stopPropagation();
+            const menu = document.getElementById(`menu-${threadId}`);
+            const allMenus = document.querySelectorAll('.thread-menu');
+            
+            // Close all other menus
+            allMenus.forEach(m => {
+                if (m !== menu) {
+                    m.classList.remove('show');
+                }
             });
-        });
+            
+            // Toggle current menu
+            menu.classList.toggle('show');
+            
+            // Close menu when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeMenu(e) {
+                    if (!menu.contains(e.target)) {
+                        menu.classList.remove('show');
+                        document.removeEventListener('click', closeMenu);
+                    }
+                });
+            }, 0);
+        }
+        
+        window.renameThread = async function(threadId) {
+            const threadItem = $(`.thread-item[data-thread-id="${threadId}"]`);
+            const currentTitle = threadItem.find('.thread-title').text();
+            const newTitle = prompt('Enter new name:', currentTitle);
+            
+            if (newTitle && newTitle !== currentTitle) {
+                try {
+                    const response = await fetch('api/rename_thread.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ thread_id: threadId, title: newTitle })
+                    });
+                    
+                    if (response.ok) {
+                        threadItem.find('.thread-title').text(newTitle);
+                    }
+                } catch (error) {
+                    console.error('Error renaming thread:', error);
+                }
+            }
+            
+            // Hide menu
+            document.getElementById(`menu-${threadId}`).classList.remove('show');
+        }
+        
+        window.deleteThread = async function(threadId) {
+            if (confirm('Are you sure you want to delete this chat?')) {
+                try {
+                    const response = await fetch('api/delete_thread.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ thread_id: threadId })
+                    });
+                    
+                    if (response.ok) {
+                        // Remove from sidebar
+                        $(`.thread-item[data-thread-id="${threadId}"]`).remove();
+                        
+                        // If it was the active thread, start new chat
+                        const currentThreadId = sessionStorage.getItem('current_thread_id');
+                        if (threadId === currentThreadId) {
+                            startNewChat();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error deleting thread:', error);
+                }
+            }
+            
+            // Hide menu
+            document.getElementById(`menu-${threadId}`).classList.remove('show');
+        }
+        
+        // Copy message function
+        window.copyMessage = function(btn) {
+            const messageContent = btn.closest('.assistant-content').querySelector('.message-content').innerText;
+            navigator.clipboard.writeText(messageContent).then(() => {
+                // Show feedback
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => {
+                    btn.innerHTML = originalHTML;
+                }, 2000);
+            });
+        }
         
         // Initialize
         init();
+    }); // End of jQuery document ready
     </script>
 </body>
 </html>
