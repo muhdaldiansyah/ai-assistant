@@ -9,12 +9,9 @@ $username = $_SESSION['username'] ?? null;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Assistant</title>
-    <link rel="icon" href="logo.svg">
     
     <!-- Bootstrap CSS - NOTE: Add bootstrap.min.css to assets/css/ -->
     <!-- <link href="assets/css/bootstrap.min.css" rel="stylesheet"> -->
-    <!-- Bootstrap Icons - NOTE: Add bootstrap-icons.css to assets/css/ -->
-    <!-- <link rel="stylesheet" href="assets/css/bootstrap-icons.css"> -->
     
     <style>
         * {
@@ -158,11 +155,6 @@ $username = $_SESSION['username'] ?? null;
             text-align: center;
         }
         
-        .welcome-icon {
-            font-size: 4rem;
-            color: var(--blenstrive-primary);
-            margin-bottom: 1.5rem;
-        }
         
         .welcome-title {
             font-size: 2.75rem;
@@ -208,17 +200,6 @@ $username = $_SESSION['username'] ?? null;
             border-color: var(--blenstrive-primary);
         }
         
-        .suggestion-icon {
-            width: 40px;
-            height: 40px;
-            background-color: var(--blenstrive-primary-light);
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--blenstrive-primary);
-            font-size: 1.25rem;
-        }
         
         .suggestion-content {
             flex: 1;
@@ -542,7 +523,6 @@ $username = $_SESSION['username'] ?? null;
         <header class="app-header">
             <div class="header-content">
                 <div class="app-branding">
-                    <!-- <img src="logo.svg" alt="AI Assistant Logo" class="app-logo"> -->
                     <h1 class="app-title">AI Assistant<span>Bot</span></h1>
                 </div>
                 <button onclick="startNewChat()" class="btn-secondary" id="newChatBtn" style="padding: 0.5rem 1rem; font-size: 0.875rem; display: none;">
@@ -556,17 +536,11 @@ $username = $_SESSION['username'] ?? null;
             <!-- Welcome Screen -->
             <div class="welcome-container" id="welcomeScreen">
                 <div class="welcome-content">
-                    <div class="welcome-icon">
-                        <i class="bi bi-mortarboard-fill"></i>
-                    </div>
                     <h2 class="welcome-title">Welcome to AI Assistant</h2>
                     <p class="welcome-subtitle">Your intelligent AI assistant</p>
                     
                     <div class="suggestion-grid">
                         <div class="suggestion-card" data-prompt="What can you help me with?">
-                            <div class="suggestion-icon">
-                                <i class="bi bi-book-half"></i>
-                            </div>
                             <div class="suggestion-content">
                                 <div class="suggestion-title">General Help</div>
                                 <div class="suggestion-example">
@@ -576,9 +550,6 @@ $username = $_SESSION['username'] ?? null;
                         </div>
                         
                         <div class="suggestion-card" data-prompt="How can I get started?">
-                            <div class="suggestion-icon">
-                                <i class="bi bi-clipboard-check"></i>
-                            </div>
                             <div class="suggestion-content">
                                 <div class="suggestion-title">Getting Started</div>
                                 <div class="suggestion-example">
@@ -588,9 +559,6 @@ $username = $_SESSION['username'] ?? null;
                         </div>
                         
                         <div class="suggestion-card" data-prompt="Tell me about your capabilities">
-                            <div class="suggestion-icon">
-                                <i class="bi bi-building"></i>
-                            </div>
                             <div class="suggestion-content">
                                 <div class="suggestion-title">Capabilities</div>
                                 <div class="suggestion-example">
@@ -600,9 +568,6 @@ $username = $_SESSION['username'] ?? null;
                         </div>
                         
                         <div class="suggestion-card" data-prompt="What services do you provide?">
-                            <div class="suggestion-icon">
-                                <i class="bi bi-trophy-fill"></i>
-                            </div>
                             <div class="suggestion-content">
                                 <div class="suggestion-title">Services</div>
                                 <div class="suggestion-example">
@@ -613,7 +578,6 @@ $username = $_SESSION['username'] ?? null;
                     </div>
                     
                     <div class="university-badge">
-                        <i class="bi bi-geo-alt-fill"></i>
                         AI Assistant
                     </div>
                 </div>
@@ -638,7 +602,7 @@ $username = $_SESSION['username'] ?? null;
                         rows="1"
                     ></textarea>
                     <button class="send-button" id="sendButton">
-                        <i class="bi bi-send-fill"></i>
+Send
                     </button>
                 </div>
                 <div class="input-helper">
@@ -651,6 +615,7 @@ $username = $_SESSION['username'] ?? null;
     <!-- Bootstrap JS - NOTE: Add bootstrap.bundle.min.js to assets/js/ -->
     <!-- <script src="assets/js/bootstrap.bundle.min.js"></script> -->
     
+    <script src="/assets/js/common.js"></script>
     <script>
         // Elements
         const messageInput = document.getElementById('messageInput');
@@ -811,13 +776,6 @@ $username = $_SESSION['username'] ?? null;
             return text;
         }
         
-        // Escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
         // Add message to chat
         function addMessage(role, content, isStreaming = false) {
             showChatView();
@@ -832,9 +790,9 @@ $username = $_SESSION['username'] ?? null;
             avatar.className = `message-avatar ${role}-avatar`;
             
             if (role === 'user') {
-                avatar.innerHTML = '<i class="bi bi-person-fill"></i>';
+                avatar.textContent = 'U';
             } else {
-                avatar.innerHTML = '<i class="bi bi-robot"></i>';
+                avatar.textContent = 'AI';
             }
             
             const messageContent = document.createElement('div');

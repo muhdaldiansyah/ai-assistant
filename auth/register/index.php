@@ -3,7 +3,7 @@ session_start();
 
 // Redirect if already logged in
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../../admin/knowledge/');
+    header('Location: ../../admin/chat/');
     exit;
 }
 ?>
@@ -95,7 +95,7 @@ if (isset($_SESSION['user_id'])) {
                     successDiv.textContent = result.message || 'Account created successfully! Redirecting to login...';
                     successDiv.style.display = 'block';
                     form.reset();
-                    setTimeout(() => { window.location.href = '../app/list.php'; }, 2000);
+                    setTimeout(() => { window.location.href = '../login/'; }, 2000);
                 } else {
                     errorDiv.textContent = result.error || 'Registration failed. Please try again.';
                     errorDiv.style.display = 'block';

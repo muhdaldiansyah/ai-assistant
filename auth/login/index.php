@@ -1,9 +1,9 @@
 <?php
 session_start();
 
-// If the user is already logged in, redirect them to the app.
+// If the user is already logged in, redirect them to the admin chat page.
 if (isset($_SESSION['user_id'])) {
-    header('Location: ../../admin/knowledge/');
+    header('Location: ../../admin/chat/');
     exit;
 }
 ?>
@@ -85,7 +85,7 @@ if (isset($_SESSION['user_id'])) {
                     successDiv.textContent = 'Login successful! Redirecting...';
                     successDiv.style.display = 'block';
                     setTimeout(() => {
-                        window.location.href = result.redirect || 'home.php';
+                        window.location.href = result.redirect || '../../admin/chat/';
                     }, 1000);
                 } else {
                     // Failure: show the error from the server and re-enable the form.

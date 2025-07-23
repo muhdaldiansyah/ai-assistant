@@ -29,6 +29,14 @@ if (empty($threadId)) {
 }
 
 try {
+    // Get database connection
+    $pdo = getDB();
+    if (!$pdo) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database connection failed']);
+        exit;
+    }
+    
     // Get thread information
     $stmt = $pdo->prepare("
         SELECT t.id, t.title, t.created_at, t.updated_at, t.user_id,

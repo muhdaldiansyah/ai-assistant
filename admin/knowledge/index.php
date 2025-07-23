@@ -1,9 +1,5 @@
 <?php
-session_start();
-if (!isset($_SESSION['user_id'])) {
-    header('Location: ../../auth/login');
-    exit;
-}
+require_once __DIR__ . '/../auth_check.php';
 ?>
 <!doctype html>
 <html lang="en">
@@ -145,6 +141,7 @@ if (!isset($_SESSION['user_id'])) {
     <script src="../../assets/js/jquery-3.7.0.min.js"></script>
     <script src="../../assets/js/jquery.dataTables.min.js"></script>
     <script src="../../assets/js/dataTables.bootstrap5.min.js"></script>
+    <script src="/assets/js/common.js"></script>
 
     <script>
         let table;
@@ -354,12 +351,6 @@ if (!isset($_SESSION['user_id'])) {
             modal.classList.remove('show');
             document.body.style.overflow = '';
             currentDocument = null;
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text || '';
-            return div.innerHTML;
         }
     </script>
 </body>

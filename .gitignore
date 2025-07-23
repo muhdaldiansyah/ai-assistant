@@ -31,11 +31,6 @@ package-lock.json
 .DS_Store
 Thumbs.db
 
-# === Database & Dumps ===
-*.sql
-*.sqlite
-*.db
-
 # === Excel / CSV / Data Dumps ===
 *.xlsx
 *.xls
